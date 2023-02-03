@@ -82,9 +82,18 @@ install.packages("Rmisc", repos = "http://cran.us.r-project.org")
 ##Replicate grouping pertains to replicate blot grouping
 
 library(Rmisc)
-hetmut_sum <- summarySE(hetmut, measurevar="Normalized.Signal", groupvars=c("Organ","Genotype"))
+hetmut_sum <- summarySE(hetmut, measurevar="Normalized.Signal", groupvars=c("Genotype","Organ"))
 
 hetmut_sum
+```
+###plot of organ and genotype group mean
+```{r}
+ggplot(hetmut_sum, aes(x = Genotype,
+                       y = Normalized.Signal,
+                       shape = Organ))+
+  geom_point()+
+  geom_errorbar(aes(ymin = Normalized.Signal - sd,
+                ymax = Normalized.Signal + sd))
 ```
 
 
@@ -118,16 +127,21 @@ ggplot(hetmut_sum1, aes(x = Genotype, y = Normalized.Signal))+
 #the successive geom_point plots the mean; specify color so it does not conflict with the color call in the first geom_point
 
 library(ggplot2)
+
 ggplot(hetmut,aes(x = Genotype,
                  y = Normalized.Signal,
                  fill = Organ,
                  alpha = 2.0))+
-  geom_point(aes(shape = Organ),
+  geom_point(aes(shape = Organ,
+                 color = Name),
              alpha = 2.0,
              size = 2,
              position = position_jitterdodge())+
     geom_boxplot(outlier.shape = NA,
                alpha = 0.1)+
+  stat_summary(fun.y = mean, color = "darkred", position = position_dodge(0.75),
+             geom = "point", shape = 3, size = 3,
+             show.legend = FALSE)+
   xlab("Naa10 genotype")+
   ylab("NAA10 signal normalized to
        REVERT total protein stain")+
@@ -142,18 +156,34 @@ ggplot(hetmut,aes(x = Genotype,
                  y = Normalized.Signal,
                  fill = Organ,
                  alpha = 2.0))+
-  geom_point(aes(shape = Organ,
-                 color = Name),
+  geom_point(aes(shape = Organ),
              alpha = 2.0,
              size = 2,
              position = position_jitterdodge())+
   geom_boxplot(outlier.shape = NA,
                alpha = 0.1)+
+    stat_summary(fun.y = mean, color = "red", position = position_dodge(0.75),
+             geom = "point", shape = 3, size = 3,stroke = 1,
+             show.legend = FALSE)+
   xlab("Naa10 genotype")+
   ylab("NAA10 signal normalized to
        REVERT total protein stain")+
   theme_bw(base_size = 12, base_family = "Helvetica")
 ```
+
+
+#Hypothesis testing
+##unpaired t-test
+```{r}
+t.test(Normalized.Signal~Genotype, hetmut)
+```
+
+```{r}
+t.test(Normalized.Signal~Organ, hetmut)
+```
+
+
+##Anova
 ```{r}
 install.packages("car", repos = "http://cran.us.r-project.org")
 ```
@@ -162,7 +192,7 @@ install.packages("car", repos = "http://cran.us.r-project.org")
 ```{r}
 library(car)
 
-hetmut.aov <- lm(Normalized.Signal~Genotype, hetmut)
+hetmut.aov <- lm(Normalized.Signal~Genotype*Organ, hetmut)
 
 summary(hetmut.aov)
 Anova(hetmut.aov, type = "III")
