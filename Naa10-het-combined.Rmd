@@ -142,7 +142,8 @@ ggplot(hetmut,aes(x = Genotype,
                  y = Normalized.Signal,
                  fill = Organ,
                  alpha = 2.0))+
-  geom_point(aes(shape = Organ),
+  geom_point(aes(shape = Organ,
+                 color = Name),
              alpha = 2.0,
              size = 2,
              position = position_jitterdodge())+
@@ -153,3 +154,17 @@ ggplot(hetmut,aes(x = Genotype,
        REVERT total protein stain")+
   theme_bw(base_size = 12, base_family = "Helvetica")
 ```
+```{r}
+install.packages("car", repos = "http://cran.us.r-project.org")
+```
+
+
+```{r}
+library(car)
+
+hetmut.aov <- lm(Normalized.Signal~Genotype, hetmut)
+
+summary(hetmut.aov)
+Anova(hetmut.aov, type = "III")
+```
+
