@@ -1,0 +1,155 @@
+---
+title: "Naa10-het-combined"
+author: "Andrew Garcia"
+date: "2023-02-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Naa10 het liver and heart combined
+Combined datasets for western blots of heart and liver lysate from
+Naa10 het and their WT/WT controls
+
+#Data
+```{r}
+hetmut <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQcRFHGDVhqvdOCxdt5pc4LOR39VsU25zrWf_R7L8UZx2IYswNd8ONUfBtO4M87tIJD8Wed0HWD2F-Q/pub?gid=0&single=true&output=csv",header = T)
+
+head(hetmut)
+```
+
+
+
+```{r}
+##switched Name and Replicate fromn integers to factors
+hetmut$Name <- as.factor(hetmut$Name)
+hetmut$Replicate <- as.factor (hetmut$Replicate)
+hetmut$Genotype <- as.factor(hetmut$Genotype)
+hetmut$Organ <- as.factor(hetmut$Organ)
+
+head(hetmut)
+
+##changed Name and Replicate from integer data to replicate data
+```
+```{r}
+install.packages("ggplot2",
+                 repos ="http://cran.us.r-project.org")
+```
+
+##distribution of NAA10 signal
+```{r}
+library(ggplot2)
+ggplot(hetmut,aes(x = Genotype,
+                 y = Normalized.Signal,
+                 color = Name,
+                 shape = Replicate))+
+  geom_point()+
+  ylab("NAA10 signal normalized to
+       REVERT total protein stain")+
+  ggtitle("NAA10 levels in Naa10
+          heterozygous mutant heart")
+
+##if we added jitter as another layer, the data points would be duplicated
+##in the resultant plot!
+#remove names
+```
+
+
+
+
+##Group-mean datasets in dplyr
+```{r}
+#I am more familiar with using summarySE in Rmisc to generate a dataframe that contains group means
+
+
+```
+
+
+#Summary data of Naa10 het heart and hypothesis testing
+```{r}
+
+install.packages("Rmisc", repos = "http://cran.us.r-project.org")
+
+```
+
+##Grouping by Genotype and Organ
+```{r}
+##Summary statistics for Normalized NAA10 signal
+##Possible groupings: genotype, replicate, organ
+##Replicate grouping pertains to replicate blot grouping
+
+library(Rmisc)
+hetmut_sum <- summarySE(hetmut, measurevar="Normalized.Signal", groupvars=c("Organ","Genotype"))
+
+hetmut_sum
+```
+
+
+##Genotype group mean
+```{r}
+##Normalized NAA10 signal is grouped by genotype.
+##N = 6 for both genotypes because the 3 biological replicates in each genotype were assayed twice
+##this gives me the group mean dataframe that I will need to layer onto the plot of individual observartions
+
+hetmut_sum1 <- summarySE(hetmut, measurevar="Normalized.Signal", groupvars=c("Genotype"))
+
+hetmut_sum1
+```
+
+
+
+```{r}
+#group means plus standards
+#essentially looking to plot this onto the individual data plot
+ggplot(hetmut_sum1, aes(x = Genotype, y = Normalized.Signal))+
+  geom_point()+
+  geom_errorbar(aes(ymin = Normalized.Signal - sd,
+                ymax = Normalized.Signal + sd))
+```
+
+##individual data and group means plot
+```{r}
+#ggplot(hetmut) plots Normalized.Signal as a function of Genotype
+#geom_point plots individual observations on this plot
+#geom_errorbar points to my group means df hetmut_sum1 and the bounds of the mean+/- standard error bar
+#the successive geom_point plots the mean; specify color so it does not conflict with the color call in the first geom_point
+
+library(ggplot2)
+ggplot(hetmut,aes(x = Genotype,
+                 y = Normalized.Signal,
+                 fill = Organ,
+                 alpha = 2.0))+
+  geom_point(aes(shape = Organ),
+             alpha = 2.0,
+             size = 2,
+             position = position_jitterdodge())+
+    geom_boxplot(outlier.shape = NA,
+               alpha = 0.1)+
+  xlab("Naa10 genotype")+
+  ylab("NAA10 signal normalized to
+       REVERT total protein stain")+
+  theme_bw(base_size = 12, base_family = "Helvetica")
+```
+
+
+###main fig; Organ fill?
+```{r}
+library(ggplot2)
+ggplot(hetmut,aes(x = Genotype,
+                 y = Normalized.Signal,
+                 fill = Organ,
+                 alpha = 2.0))+
+  geom_point(aes(shape = Organ),
+             alpha = 2.0,
+             size = 2,
+             position = position_jitterdodge())+
+  geom_boxplot(outlier.shape = NA,
+               alpha = 0.1)+
+  xlab("Naa10 genotype")+
+  ylab("NAA10 signal normalized to
+       REVERT total protein stain")+
+  theme_bw(base_size = 12, base_family = "Helvetica")
+```
