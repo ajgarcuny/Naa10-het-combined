@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Combined datasets for western blots of heart and liver lysate from
 Naa10 het and their WT/WT controls
 
-#Data
+# Data
 ```{r}
 hetmut <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQcRFHGDVhqvdOCxdt5pc4LOR39VsU25zrWf_R7L8UZx2IYswNd8ONUfBtO4M87tIJD8Wed0HWD2F-Q/pub?gid=0&single=true&output=csv",header = T)
 
@@ -39,7 +39,7 @@ install.packages("ggplot2",
                  repos ="http://cran.us.r-project.org")
 ```
 
-##distribution of NAA10 signal
+## distribution of NAA10 signal
 ```{r}
 library(ggplot2)
 ggplot(hetmut,aes(x = Genotype,
@@ -60,7 +60,7 @@ ggplot(hetmut,aes(x = Genotype,
 
 
 
-##Group-mean datasets in dplyr
+## Group-mean datasets in dplyr
 ```{r}
 #I am more familiar with using summarySE in Rmisc to generate a dataframe that contains group means
 
@@ -68,14 +68,14 @@ ggplot(hetmut,aes(x = Genotype,
 ```
 
 
-#Summary data of Naa10 het heart and hypothesis testing
+# Summary data of Naa10 het heart and hypothesis testing
 ```{r}
 
 install.packages("Rmisc", repos = "http://cran.us.r-project.org")
 
 ```
 
-##Grouping by Genotype and Organ
+## Grouping by Genotype and Organ
 ```{r}
 ##Summary statistics for Normalized NAA10 signal
 ##Possible groupings: genotype, replicate, organ
@@ -86,7 +86,7 @@ hetmut_sum <- summarySE(hetmut, measurevar="Normalized.Signal", groupvars=c("Gen
 
 hetmut_sum
 ```
-###plot of organ and genotype group mean
+### plot of organ and genotype group mean
 ```{r}
 ggplot(hetmut_sum, aes(x = Genotype,
                        y = Normalized.Signal,
@@ -97,7 +97,7 @@ ggplot(hetmut_sum, aes(x = Genotype,
 ```
 
 
-##Genotype group mean
+## Genotype group mean
 ```{r}
 ##Normalized NAA10 signal is grouped by genotype.
 ##N = 6 for both genotypes because the 3 biological replicates in each genotype were assayed twice
@@ -119,7 +119,7 @@ ggplot(hetmut_sum1, aes(x = Genotype, y = Normalized.Signal))+
                 ymax = Normalized.Signal + sd))
 ```
 
-##individual data and group means plot
+## individual data and group means plot
 ```{r}
 #ggplot(hetmut) plots Normalized.Signal as a function of Genotype
 #geom_point plots individual observations on this plot
@@ -149,7 +149,7 @@ ggplot(hetmut,aes(x = Genotype,
 ```
 
 
-###main fig; Organ fill?
+### main fig; Organ fill?
 ```{r}
 library(ggplot2)
 ggplot(hetmut,aes(x = Genotype,
@@ -163,7 +163,7 @@ ggplot(hetmut,aes(x = Genotype,
   geom_boxplot(outlier.shape = NA,
                alpha = 0.1)+
     stat_summary(fun.y = mean, color = "red", position = position_dodge(0.75),
-             geom = "point", shape = 3, size = 3,stroke = 1,
+             geom = "point", shape = 1, size = 2,stroke = 1,
              show.legend = FALSE)+
   xlab("Naa10 genotype")+
   ylab("NAA10 signal normalized to
@@ -172,8 +172,8 @@ ggplot(hetmut,aes(x = Genotype,
 ```
 
 
-#Hypothesis testing
-##unpaired t-test
+# Hypothesis testing
+## unpaired t-test
 ```{r}
 t.test(Normalized.Signal~Genotype, hetmut)
 ```
@@ -182,23 +182,72 @@ t.test(Normalized.Signal~Genotype, hetmut)
 t.test(Normalized.Signal~Organ, hetmut)
 ```
 
+Instead of repeated t-testing, just do ANOVA.
 
-##Anova
+
+## Anova and modeling
 ```{r}
 install.packages("car", repos = "http://cran.us.r-project.org")
 ```
 
-
+### Signal~Genotype model
 ```{r}
 library(car)
+hetgen.aov <- lm(Normalized.Signal~Genotype,hetmut)
 
-hetmut.aov <- lm(Normalized.Signal~Genotype*Organ, hetmut)
-
-summary(hetmut.aov)
-Anova(hetmut.aov, type = "III")
+summary(hetgen.aov)
+Anova(hetgen.aov)
 ```
+
+### Signal~Genotype*Organ model
+```{r}
+#are differences in normalized NAA10 signal attributable to Genotype and/or Organ
+
+library(car)
+
+hetorg.aov <- lm(Normalized.Signal~Genotype*Organ, hetmut)
+
+summary(hetorg.aov)
+Anova(hetorg.aov, type = "III")
+```
+Genotype contributes to significant differences in mean normalized NAA10 signal.
+
+Organ is non-significant, but interacts with Genotype to contribute differences
+in mean normalized NAA10 signal.
+
+#### Signal~Genotype*Organ post hoc
+```{r}
+library(multcomp)
+
+hetorg.tuk <- glht(hetorg.aov, linfct = mcp(Genotype = "Tukey"))
+summary(hetorg.tuk)
+
+
+```
+
 
 ```{r}
-TukeyHSD(aov(hetmut.aov), conf.level = 0.95)
+TukeyHSD(aov(hetorg.aov), conf.level = 0.95)
 ```
+
+
+### Signal~Genotype* Organ * Replicate
+```{r}
+hetrep.aov <- lm(Normalized.Signal~Genotype*Replicate*Organ, hetmut)
+
+summary(hetrep.aov)
+```
+
+I can drop Organ or Replicate from the model because they likely are colinear.
+
+#### If I dropped organ
+```{r}
+reptest.aov <- lm(Normalized.Signal~Genotype*Replicate,hetmut)
+
+summary(reptest.aov)
+Anova(reptest.aov,type="III")
+TukeyHSD(aov(reptest.aov),conf.level = 0.95)
+```
+
+
 
