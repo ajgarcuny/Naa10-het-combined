@@ -229,10 +229,11 @@ in mean normalized NAA10 signal.
 ```{r}
 library(multcomp)
 
-hetorg.tuk <- glht(hetorg.aov, linfct = mcp(Genotype = "Tukey"))
+hetgen.tuk <- glht(hetorg.aov, linfct = mcp(Genotype = "Tukey"))
+summary(hetgen.tuk)
+
+hetorg.tuk <- glht(hetorg.aov, linfct = mcp(Organ = "Tukey"))
 summary(hetorg.tuk)
-
-
 ```
 
 
