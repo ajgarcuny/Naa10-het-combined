@@ -185,6 +185,9 @@ t.test(Normalized.Signal~Organ, hetmut)
 
 Instead of repeated t-testing, just do ANOVA.
 
+This way I can see if normalized NAA10 signal differs due to
+genotype, organ, replicate blot or an interaction between genotype
+and other factors.
 
 ## Anova and modeling
 ```{r}
@@ -208,6 +211,7 @@ library(car)
 
 hetorg.aov <- lm(Normalized.Signal~Genotype*Organ, hetmut)
 
+plot(hetorg.aov)
 summary(hetorg.aov)
 Anova(hetorg.aov, type = "III")
 ```
