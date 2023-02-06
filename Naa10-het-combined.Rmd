@@ -166,6 +166,8 @@ library(ggsignif)
 
 
 ```{r}
+library(ggplot2)
+
 main.fig <- ggplot(hetmut,aes(x = Genotype,
                  y = Normalized.Signal,
                  fill = Organ,
@@ -176,7 +178,7 @@ main.fig <- ggplot(hetmut,aes(x = Genotype,
              position = position_jitterdodge())+
   geom_boxplot(outlier.shape = NA,
                alpha = 0.1)+
-    stat_summary(fun.y = mean, color = "black", position = position_dodge(0.75),width = 0.2,
+    stat_summary(fun = mean, color = "black", position = position_dodge(0.75),width = 0.2,
              geom = "crossbar",
              show.legend = FALSE)+
    geom_errorbar(data = hetmut_sum, aes(ymin=Normalized.Signal-sd,
@@ -186,7 +188,8 @@ main.fig <- ggplot(hetmut,aes(x = Genotype,
   scale_alpha(guide = "none")+
   xlab("Naa10 genotype")+
   ylab("NAA10 signal normalized to
-       REVERT total protein stain")
+       REVERT total protein stain")+theme_bw(base_size =12, base_family = "Helvetica")
+
 
 main.fig
 ```
