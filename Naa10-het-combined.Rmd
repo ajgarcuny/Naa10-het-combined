@@ -87,6 +87,11 @@ hetmut_sum <- summarySE(hetmut, measurevar="Normalized.Signal", groupvars=c("Gen
 
 hetmut_sum
 ```
+```{r}
+
+```
+
+
 ### plot of organ and genotype group mean
 ```{r}
 ggplot(hetmut_sum, aes(x = Genotype,
@@ -120,38 +125,13 @@ ggplot(hetmut_sum1, aes(x = Genotype, y = Normalized.Signal))+
                 ymax = Normalized.Signal + sd))
 ```
 
-## individual data and group means plot
+## main fig
 ```{r}
 #ggplot(hetmut) plots Normalized.Signal as a function of Genotype
 #geom_point plots individual observations on this plot
 #geom_errorbar points to my group means df hetmut_sum1 and the bounds of the mean+/- standard error bar
 #the successive geom_point plots the mean; specify color so it does not conflict with the color call in the first geom_point
 
-library(ggplot2)
-
-ggplot(hetmut,aes(x = Genotype,
-                 y = Normalized.Signal,
-                 fill = Organ,
-                 alpha = 2.0))+
-  geom_point(aes(shape = Organ,
-                 color = Name),
-             alpha = 2.0,
-             size = 2,
-             position = position_jitterdodge())+
-    geom_boxplot(outlier.shape = NA,
-               alpha = 0.1)+
-  stat_summary(fun.y = mean, color = "darkred", position = position_dodge(0.75),
-             geom = "point", shape = 3, size = 3,
-             show.legend = FALSE)+
-  xlab("Naa10 genotype")+
-  ylab("NAA10 signal normalized to
-       REVERT total protein stain")+
-  theme_bw(base_size = 12, base_family = "Helvetica")
-```
-
-
-### main fig
-```{r}
 library(ggplot2)
 ggplot(hetmut,aes(x = Genotype,
                  y = Normalized.Signal,
@@ -163,8 +143,8 @@ ggplot(hetmut,aes(x = Genotype,
              position = position_jitterdodge())+
   geom_boxplot(outlier.shape = NA,
                alpha = 0.1)+
-    stat_summary(fun.y = mean, color = "black", position = position_dodge(0.75),
-             geom = "point", shape = 3, size = 10,stroke = 1,
+    stat_summary(fun.y = mean, color = "black", position = position_dodge(0.75),width = 0.2,
+             geom = "crossbar",
              show.legend = FALSE)+
    geom_errorbar(data = hetmut_sum, aes(ymin=Normalized.Signal-sd,
                      ymax=Normalized.Signal+sd),
@@ -175,6 +155,40 @@ ggplot(hetmut,aes(x = Genotype,
   ylab("NAA10 signal normalized to
        REVERT total protein stain")+
   theme_bw(base_size = 12, base_family = "Helvetica")
+```
+
+
+##main fig but with significance indicators
+```{r}
+install.packages("ggsignif", repos = "http://cran.us.r-project.org")
+library(ggsignif)
+```
+
+
+```{r}
+main.fig <- ggplot(hetmut,aes(x = Genotype,
+                 y = Normalized.Signal,
+                 fill = Organ,
+                 alpha = 1))+
+  geom_point(aes(shape = Organ),
+             alpha = 2.0,
+             size = 2,
+             position = position_jitterdodge())+
+  geom_boxplot(outlier.shape = NA,
+               alpha = 0.1)+
+    stat_summary(fun.y = mean, color = "black", position = position_dodge(0.75),width = 0.2,
+             geom = "crossbar",
+             show.legend = FALSE)+
+   geom_errorbar(data = hetmut_sum, aes(ymin=Normalized.Signal-sd,
+                     ymax=Normalized.Signal+sd),
+                 width=.2,
+                 position=position_dodge(0.75))+
+  scale_alpha(guide = "none")+
+  xlab("Naa10 genotype")+
+  ylab("NAA10 signal normalized to
+       REVERT total protein stain")
+
+main.fig
 ```
 
 
